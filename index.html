@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 自定义1：网站标题 -->
+    <title>我的专属链接中转工具（带二维码）</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "微软雅黑", sans-serif; }
+        body { 
+            padding: 30px; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background-color: #f5f7fa; /* 自定义2：页面背景色 */
+        }
+        .header { 
+            text-align: center; 
+            margin-bottom: 40px; 
+            padding-bottom: 20px; 
+            border-bottom: 1px solid #eee; 
+        }
+        .header h2 { 
+            color: #2d3748; /* 自定义3：标题颜色 */
+            font-size: 24px; /* 自定义4：标题字号 */
+            margin-bottom: 10px; 
+        }
+        .header p { color: #718096; /* 自定义5：副标题颜色 */ }
+        .input-box { 
+            width: 100%; 
+            padding: 16px; 
+            margin-bottom: 25px; 
+            border: 1px solid #dee2e6; 
+            border-radius: 10px; /* 自定义6：输入框圆角 */
+            font-size: 16px; 
+            outline: none; 
+            transition: border-color 0.3s; 
+        }
+        .input-box:focus { border-color: #4299e1; /* 自定义7：输入框聚焦边框色 */ }
+        .btn { 
+            width: 100%; 
+            padding: 16px; 
+            background-color: #4299e1; /* 自定义8：按钮背景色 */
+            color: white; 
+            border: none; 
+            border-radius: 10px; /* 自定义9：按钮圆角 */
+            font-size: 18px; /* 自定义10：按钮字号 */
+            cursor: pointer; 
+            transition: background-color 0.3s; 
+        }
+        .btn:hover { background-color: #3182ce; /* 自定义11：按钮hover颜色 */ }
+        .result-container { 
+            margin-top: 30px; 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 30px; 
+            justify-content: center; 
+        }
+        .result-box { 
+            flex: 1; 
+            min-width: 300px; 
+            padding: 20px; 
+            border: 1px solid #e8f4f8; 
+            border-radius: 10px; 
+            background-color: white; 
+            display: none; 
+        }
+        .qrcode-box { 
+            flex: 1; 
+            min-width: 200px; 
+            padding: 20px; 
+            border: 1px solid #e8f4f8; 
+            border-radius: 10px; 
+            background-color: white; 
+            display: none; 
+            text-align: center; 
+        }
+        .result-title, .qrcode-title { 
+            font-weight: bold; 
+            margin-bottom: 15px; 
+            color: #2d3748; 
+            font-size: 16px; 
+        }
+        .result-url { 
+            width: 100%; 
+            padding: 12px; 
+            border: 1px solid #dee2e6; 
+            border-radius: 8px; 
+            margin-bottom: 15px; 
+            background-color: #f8f9fa; 
+            font-size: 14px; 
+            color: #2d3748; 
+            word-break: break-all; 
+        }
+        .copy-btn { 
+            padding: 10px 20px; 
+            background-color: #48bb78; /* 自定义12：复制按钮背景色 */
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 14px; 
+            cursor: pointer; 
+        }
+        .copy-btn:hover { background-color: #38a169; /* 自定义13：复制按钮hover颜色 */ }
+        #qrcode { 
+            margin: 0 auto; 
+            border: 1px solid #eee; 
+            padding: 10px; 
+            background-color: white; 
+        }
+        .qrcode-tip { 
+            margin-top: 15px; 
+            color: #718096; 
+            font-size: 14px; 
+        }
+        .footer { 
+            text-align: center; 
+            margin-top: 50px; 
+            color: #718096; 
+            font-size: 14px; 
+        }
+    </style>
+    <!-- 引入QRCode.js（生成二维码核心库，无需下载，直接引用CDN） -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+    <div class="header">
+        <h2>我的专属链接中转工具</h2> <!-- 自定义14：页面主标题 -->
+        <p>输入链接，生成防红地址+二维码（微信长按识别）</p> <!-- 自定义15：页面副标题 -->
+    </div>
+
+    <!-- 自定义16：输入框提示文字 -->
+    <input type="url" class="input-box" id="targetUrl" placeholder="请输入需要中转的链接（例如：https://www.xxx.com）" required>
+    <button class="btn" onclick="generateAntiRedUrl()">生成中转链接+二维码</button> <!-- 自定义17：按钮文字 -->
+
+    <div class="result-container">
+        <!-- 链接结果区 -->
+        <div class="result-box" id="resultBox">
+            <div class="result-title">中转链接已生成</div> <!-- 自定义18：结果标题 -->
+            <input type="text" class="result-url" id="antiRedUrl" readonly>
+            <button class="copy-btn" onclick="copyUrl()">一键复制</button> <!-- 自定义19：复制按钮文字 -->
+            <p style="margin-top: 10px; color: #718096; font-size: 14px;">
+                复制链接到微信打开，或长按右侧二维码识别 ↓
+            </p> <!-- 自定义20：结果提示文案 -->
+        </div>
+
+        <!-- 二维码结果区 -->
+        <div class="qrcode-box" id="qrcodeBox">
+            <div class="qrcode-title">二维码（长按识别）</div> <!-- 自定义21：二维码标题 -->
+            <div id="qrcode"></div> <!-- 二维码生成容器 -->
+            <p class="qrcode-tip">微信长按识别，自动提示浏览器打开</p> <!-- 自定义22：二维码提示文案 -->
+        </div>
+    </div>
+
+    <div class="footer">
+        我的专属工具 © 2025 <!-- 自定义23：底部版权信息 -->
+    </div>
+
+    <script>
+        // 自定义24：替换为你的域名+jump.htm路径（核心！必须改）
+        const BASE_URL = "https://xhnb6668.github.io/legendary-robot/jump.htm"; 
+        // 自定义25：加密盐值（自行修改，与jump.htm保持一致）
+        const CUSTOM_SALT = "your_unique_salt_2025"; 
+        // 存储二维码实例，避免重复生成
+        let qrcodeInstance = null;
+
+        // 生成防红链接+二维码
+        function generateAntiRedUrl() {
+            const targetUrl = document.getElementById('targetUrl').value.trim();
+            if (!targetUrl) {
+                // 自定义26：空输入提示
+                alert('请输入有效的链接地址！');
+                return;
+            }
+
+            // 1. 加密生成防红链接
+            const encryptedUrl = btoa(encodeURIComponent(targetUrl + CUSTOM_SALT));
+            const antiRedUrl = `${BASE_URL}?url=${encryptedUrl}`;
+
+            // 2. 显示链接结果
+            document.getElementById('antiRedUrl').value = antiRedUrl;
+            document.getElementById('resultBox').style.display = 'block';
+
+            // 3. 生成二维码（先销毁旧实例，再创建新实例）
+            if (qrcodeInstance) {
+                document.getElementById('qrcode').innerHTML = ''; // 清空旧二维码
+            }
+            qrcodeInstance = new QRCode(document.getElementById('qrcode'), {
+                text: antiRedUrl, // 二维码内容=防红链接
+                width: 180, // 自定义27：二维码宽度
+                height: 180, // 自定义28：二维码高度
+                colorDark: '#000000', // 自定义29：二维码深色（默认黑色）
+                colorLight: '#ffffff', // 自定义30：二维码浅色（默认白色）
+                correctLevel: QRCode.CorrectLevel.H // 容错级别（H=最高容错）
+            });
+
+            // 4. 显示二维码容器
+            document.getElementById('qrcodeBox').style.display = 'block';
+        }
+
+        // 复制链接功能
+        function copyUrl() {
+            const urlInput = document.getElementById('antiRedUrl');
+            urlInput.select();
+            document.execCommand('copy');
+            // 自定义31：复制成功提示
+            alert('复制成功！快去微信分享吧～');
+        }
+    </script>
+</body>
+</html>

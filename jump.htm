@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 自定义26：跳转页标题 -->
+    <title>正在前往目标页面</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "微软雅黑", sans-serif; }
+        body { 
+            padding: 30px; 
+            text-align: center; 
+            background-color: #f5f7fa; /* 自定义27：跳转页背景色 */
+        }
+        .container { 
+            max-width: 600px; 
+            margin: 80px auto; 
+            padding: 40px; 
+            background-color: white; 
+            border-radius: 16px; /* 自定义28：容器圆角 */
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
+        }
+        .icon { 
+            width: 80px; 
+            height: 80px; 
+            margin: 0 auto 30px; 
+            background-color: #e8f4f8; /* 自定义29：图标背景色 */
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+        }
+        .icon svg { width: 40px; height: 40px; fill: #4299e1; /* 自定义30：图标颜色 */ }
+        h2 { 
+            color: #2d3748; /* 自定义31：跳转页标题颜色 */
+            font-size: 22px; 
+            margin-bottom: 20px; 
+        }
+        p { 
+            color: #718096; /* 自定义32：提示文案颜色 */
+            font-size: 16px; 
+            line-height: 1.6; 
+            margin-bottom: 35px; 
+        }
+        .btn { 
+            padding: 14px 32px; 
+            background-color: #4299e1; /* 自定义33：跳转按钮背景色 */
+            color: white; 
+            border: none; 
+            border-radius: 10px; /* 自定义34：跳转按钮圆角 */
+            font-size: 18px; 
+            cursor: pointer; 
+            transition: background-color 0.3s; 
+        }
+        .btn:hover { background-color: #3182ce; /* 自定义35：跳转按钮hover颜色 */ }
+        .tip { 
+            color: #a0aec0; /* 自定义36：底部小字颜色 */
+            font-size: 14px; 
+            margin-top: 25px; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="wechatTip">
+        <div class="icon">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-2.84 1.24 0 2.38.6 2.73 1.39h1.94c-.38-1.25-1.88-2.4-3.45-2.4-2.4 0-4.44 1.66-4.44 4.19 0 1.79 1.27 2.87 4.01 3.44 2.5.51 3.65 1.38 3.65 2.31 0 .79-.49 1.49-2.5 2.01z"/>
+            </svg>
+        </div>
+        <h2>微信无法直接打开该链接</h2> <!-- 自定义37：微信内提示标题 -->
+        <p>为保障你的访问安全，请点击下方按钮，用浏览器打开继续访问～</p> <!-- 自定义38：微信内提示文案 -->
+        <button class="btn" onclick="openInBrowser()">打开浏览器访问</button> <!-- 自定义39：按钮文字 -->
+        <p class="tip">若点击无反应，可长按链接复制后粘贴到浏览器</p> <!-- 自定义40：补充提示 -->
+    </div>
+
+    <div class="container" id="jumpTip" style="display: none;">
+        <div class="icon">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.3 14.29l-4.29-4.29L9.71 13l6 6 8.29-8.29-1.41-1.41z"/>
+            </svg>
+        </div>
+        <h2>正在自动跳转...</h2> <!-- 自定义41：非微信环境标题 -->
+        <p>若3秒后未自动跳转，请点击下方按钮手动跳转</p> <!-- 自定义42：非微信环境提示文案 -->
+        <button class="btn" onclick="directJump()">立即跳转</button> <!-- 自定义43：手动跳转按钮文字 -->
+        <p class="tip">跳转链接安全可靠，请放心访问</p> <!-- 自定义44：底部提示 -->
+    </div>
+
+    <script>
+        const CUSTOM_SALT = "your_unique_salt_2025"; // 与index.html保持一致（必须相同！）
+        const JUMP_DELAY = 3000; // 自动跳转延迟（毫秒）
+
+        function getUrlParam(name) {
+            const reg = new RegExp(`(^|&)${name}=([^&]*)(&|$)`);
+            const r = window.location.search.substr(1).match(reg);
+            return r ? decodeURIComponent(r[2]) : '';
+        }
+
+        function isWeChat() {
+            const ua = navigator.userAgent.toLowerCase();
+            return ua.indexOf('micromessenger') !== -1;
+        }
+
+        const encodeUrl = getUrlParam('url');
+        let targetUrl = '';
+        if (encodeUrl) {
+            try {
+                targetUrl = decodeURIComponent(atob(encodeUrl)).replace(CUSTOM_SALT, '');
+            } catch (e) {
+                alert('链接无效或已过期，请重新生成！');
+            }
+        } else {
+            alert('链接无效或已过期，请重新生成！');
+        }
+
+        if (isWeChat()) {
+            document.getElementById('wechatTip').style.display = 'block';
+        } else {
+            document.getElementById('jumpTip').style.display = 'block';
+            setTimeout(directJump, JUMP_DELAY);
+        }
+
+        function openInBrowser() {
+            if (targetUrl) window.location.href = targetUrl;
+            else alert('链接无效！');
+        }
+
+        function directJump() {
+            if (targetUrl) window.location.href = targetUrl;
+            else alert('链接无效！');
+        }
+    </script>
+</body>
+</html>
